@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Project for Daily Reporter
+Parameters:
+  Stage:
+    Type: "String"
+  DeployBucket:
+    Type: "String"
+
+Globals:
+  Function:
+    Timeout: 120
+    Runtime: go1.x
+    Tracing: Active
+
+Resources:
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      Cors:
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+        AllowMethods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+        AllowOrigin: "'*'"
+
+  ApiGatewayResponse4xx:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+      ResponseType: DEFAULT_4XX
+      RestApiId: !Ref ApiGateway
+
+  ApiGatewayResponse5xx:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+      ResponseType: DEFAULT_5XX
+      RestApiId: !Ref ApiGateway
+
+  DailyReporterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["-", ["daily-reporter-api", !Ref Stage]]
+      CodeUri: bin/integration.zip
+      Handler: integration
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Join ["-", ["daily-reporter", !Ref Stage]]
+      Events:
+        PostOrderEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /daily
+            Method: POST
+      Environment:
+        Variables:
+          Bucket: !Join ["-", ["daily-reporter", !Ref Stage]]
+
+  DailyReporterBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ["-", ["daily-reporter", !Ref Stage]]
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties: 
+      Enabled: true
+      GenerateDistinctId: true
+      Name: !Join [" ", ["Daily Reporter API Key", !Ref Stage]]
+
+  UsagePlan:
+    DependsOn: ApiGatewayStage
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+        - ApiId: !Ref ApiGateway
+          Stage: !Ref Stage
+      UsagePlanName: !Join [" ", ["Daily Reporter API Usage Plan", !Ref Stage]]
+  
+  UsagePlanKey:
+    DependsOn: ApiGatewayStage
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties: 
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
