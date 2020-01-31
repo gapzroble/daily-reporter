@@ -15,3 +15,5 @@
 vendor/
 bin/
 packaged.yml
+fullScreenshot.png
+nova_autolog_*.png
