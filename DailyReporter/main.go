@@ -8,7 +8,42 @@ import (
 	"time"
 )
 
+func isWeekend(ts time.Time) bool {
+	wd := ts.Weekday()
+	return wd == time.Sunday || wd == time.Saturday
+}
+
+func canRun(ts time.Time) (bool, string) {
+	// check weekends
+	if isWeekend(ts) {
+		return false, "Weekend"
+	}
+
+	// check last day of the month
+	// don't run on schedule(usually 10:30pm)
+	// probably logged already
+	currentMonth := ts.Month()
+	for {
+		ts = ts.AddDate(0, 0, 1)
+		if isWeekend(ts) {
+			continue
+		}
+		if ts.Month() != currentMonth {
+			return false, "Last day of month"
+		}
+		break // fine
+	}
+
+	// TODO: check holidays
+	return true, ""
+}
+
 func main() {
+	if ok, reason := canRun(time.Now()); !ok {
+		log.Panicf("Won't run today: %s\n", reason)
+		return
+	}
+
 	var wg sync.WaitGroup
 
 	wg.Add(1)
