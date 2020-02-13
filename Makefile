@@ -3,8 +3,8 @@ SHELL := /bin/bash
 build: deps clean test
 	GOARCH=amd64 GOOS=linux go build -o ./bin/DailyReporter ./DailyReporter
 
-run:
-	go run ./DailyReporter/*.go
+run: build
+	./bin/DailyReporter
 
 deps:
 	GOPRIVATE=github.com go mod vendor

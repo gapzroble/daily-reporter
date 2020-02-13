@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/emulation"
@@ -14,23 +15,11 @@ import (
 const waitScreenshot = 15 // seconds
 
 var (
-	username string
-	password string
-	project  string
-	hours    string
-	details  string
-	novaURL  = "https://nova.fmi.filemaker-cloud.com/fmi/webd/nova%205"
+	novaURL   = "https://nova.fmi.filemaker-cloud.com/fmi/webd/nova%205"
+	novaHours = "8,5"
 )
 
-func init() {
-	username = os.Getenv("USERNAME")
-	password = os.Getenv("PASSWORD")
-	project = os.Getenv("PROJECT")
-	hours = os.Getenv("HOURS")
-	details = os.Getenv("DETAILS")
-}
-
-func logNova() ([]byte, error) {
+func logNova(hours <-chan float64) ([]byte, error) {
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer timeoutCancel()
 
@@ -43,6 +32,8 @@ func logNova() ([]byte, error) {
 	chromeCtx, chromeCancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 	defer chromeCancel()
 
+	setNovaHours(<-hours)
+
 	var buf []byte
 	tasks := logAndScreenshot(novaURL, 90, &buf)
 
@@ -51,13 +42,6 @@ func logNova() ([]byte, error) {
 	}
 
 	return buf, nil
-}
-
-func debugNova(msg string, args ...interface{}) chromedp.ActionFunc {
-	return chromedp.ActionFunc(func(ctx context.Context) error {
-		log.Printf(msg+"\n", args...)
-		return nil
-	})
 }
 
 func logAndScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks {
@@ -91,7 +75,7 @@ func logAndScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks 
 
 		debugNova("Filling out report details.."),
 		chromedp.Click(`//div[text()="Hours"]/../div`),
-		chromedp.SendKeys(`[contentEditable=true]`, hours),
+		chromedp.SendKeys(`[contentEditable=true]`, novaHours),
 		chromedp.Click(`//div[contains(text(), "Write major activities done during the time period here")]/../div`),
 		chromedp.SendKeys(`[contentEditable=true]`, details+"."),
 		chromedp.Click(`//div[contains(text(), "Category")]/../..`),
@@ -137,4 +121,18 @@ func logAndScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks 
 			return nil
 		}),
 	}
+}
+
+func debugNova(msg string, args ...interface{}) chromedp.ActionFunc {
+	return chromedp.ActionFunc(func(ctx context.Context) error {
+		log.Printf(msg+"\n", args...)
+		return nil
+	})
+}
+
+func setNovaHours(hours float64) {
+	novaHours = fmt.Sprintf("%f", hours)
+	novaHours = strings.TrimRight(novaHours, "0")
+	novaHours = strings.TrimRight(novaHours, ".")
+	novaHours = strings.ReplaceAll(novaHours, ".", ",")
 }
