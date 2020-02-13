@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
@@ -39,8 +40,10 @@ func canRun(ts time.Time) (bool, string) {
 }
 
 func main() {
+	defer handlePanic()
+
 	if ok, reason := canRun(time.Now()); !ok {
-		log.Printf("Won't run today: %s\n", reason)
+		debug("main", "Won't run today: %s\n", reason)
 		return
 	}
 
@@ -52,7 +55,15 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		remaining := getLogableHours()
+		remaining, err := getLogableHours()
+		if err != nil {
+			debug("main", "Worklogs error: %s\n", err.Error())
+		}
+		if remaining <= 0 {
+			debug("main", "Loggable hours: %.0f, already logged?", remaining)
+			debug("main", "Quit")
+			os.Exit(-1)
+		}
 		for i := 0; i < bufSize; i++ {
 			hours <- remaining
 		}
@@ -63,12 +74,12 @@ func main() {
 		defer wg.Done()
 		screenshot, err := logNova(hours)
 		if err != nil {
-			log.Printf("Nova error: %s\n", err.Error())
+			debug("main", "Nova error: %s\n", err.Error())
 			return
 		}
 		dest := fmt.Sprintf("nova_autolog_%s.png", time.Now().Format(time.RFC3339))
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
-			log.Printf("Nova save screenshot: %s\n", err.Error())
+			debug("main", "Nova save screenshot: %s\n", err.Error())
 		}
 	}()
 
@@ -77,16 +88,20 @@ func main() {
 		defer wg.Done()
 		err := logJira(hours)
 		if err != nil {
-			log.Printf("JIRA error: %s\n", err.Error())
+			debug("main", "JIRA error: %s\n", err.Error())
 		}
 	}()
 
 	wg.Wait()
 }
 
+func debug(thread, msg string, args ...interface{}) {
+	log.Printf("["+thread+"] "+msg+"\n", args...)
+}
+
 func handlePanic() {
 	msg := recover()
 	if msg != nil {
-		log.Printf("Go panic: %#v\n", msg)
+		debug("main", "Go panic: %#v\n", msg)
 	}
 }

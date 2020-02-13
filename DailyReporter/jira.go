@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 )
@@ -40,7 +39,8 @@ func newWorklog(hours float64) worklog {
 }
 
 func logJira(hours <-chan float64) error {
-	log.Println("Logging JIRA")
+	debug("jira", "Logging JIRA")
+	defer debug("jira", "Done JIRA")
 	data, err := newWorklog(<-hours).toJSON()
 	if err != nil {
 		return err
@@ -56,13 +56,6 @@ func logJira(hours <-chan float64) error {
 	if err != nil {
 		return err
 	}
-
-	// if debug {
-	// 	fmt.Printf("code: %d\n", response.StatusCode)
-	// 	fmt.Printf("headers: %+v\n", response.Header)
-	// 	body, _ := ioutil.ReadAll(response.Body)
-	// 	fmt.Printf("body: %s\n", body)
-	// }
 
 	if response.StatusCode > 299 {
 		return fmt.Errorf("Expecting 2xx response code, got %d", response.StatusCode)

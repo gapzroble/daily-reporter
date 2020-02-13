@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 )
@@ -25,10 +24,10 @@ func (logs *worklogs) Logged() float64 {
 	return logged
 }
 
-func getLogableHours() (hours float64) {
-	log.Println("Getting available hours")
+func getLogableHours() (hours float64, err error) {
+	debug("tempo", "Getting available hours")
 	defer func() {
-		log.Println("Loggable hours", hours)
+		debug("tempo", "Loggable hours: %.2f", hours)
 	}()
 	hours = 8.5 // default
 	today := time.Now().Format("2006-01-02")
@@ -36,29 +35,25 @@ func getLogableHours() (hours float64) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Printf("Error creating request, %s", err.Error())
-		return
+		return hours, err
 	}
 	req.Header.Add("Authorization", "Bearer "+tempoToken)
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Printf("Error creating request, %s", err.Error())
-		return
+		return hours, err
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Printf("Error reading response, %s", err.Error())
-		return
+		return hours, err
 	}
 
 	worklogs, err := newWorklogs(body)
 	if err != nil {
-		log.Printf("Error unmarshall worklogs, %s", err.Error())
-		return
+		return hours, err
 	}
 
-	return hours - worklogs.Logged()
+	return hours - worklogs.Logged(), nil
 }
 
 func newWorklogs(data []byte) (*worklogs, error) {

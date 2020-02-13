@@ -20,6 +20,8 @@ var (
 )
 
 func logNova(hours <-chan float64) ([]byte, error) {
+	debug("nova", "Logging Nova")
+	defer debug("nova", "Done Nova")
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer timeoutCancel()
 
@@ -125,7 +127,7 @@ func logAndScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks 
 
 func debugNova(msg string, args ...interface{}) chromedp.ActionFunc {
 	return chromedp.ActionFunc(func(ctx context.Context) error {
-		log.Printf(msg+"\n", args...)
+		debug("nova", msg, args...)
 		return nil
 	})
 }
