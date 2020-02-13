@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os/user"
 	"sync"
 	"time"
 )
@@ -67,8 +66,7 @@ func main() {
 			log.Printf("Nova error: %s\n", err.Error())
 			return
 		}
-		usr, _ := user.Current()
-		dest := fmt.Sprintf("%s/Downloads/nova_autolog_%s.png", usr.HomeDir, time.Now().Format(time.RFC3339))
+		dest := fmt.Sprintf("nova_autolog_%s.png", time.Now().Format(time.RFC3339))
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
 			log.Printf("Nova save screenshot: %s\n", err.Error())
 		}
