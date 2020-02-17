@@ -20,8 +20,12 @@ var (
 )
 
 func logNova(hours <-chan float64) ([]byte, error) {
-	debug("nova", "Logging Nova")
 	defer debug("nova", "Done Nova")
+	logHours := <-hours
+	if logHours <= 0 {
+		return nil, nil
+	}
+	debug("nova", "Logging Nova")
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer timeoutCancel()
 
@@ -90,9 +94,6 @@ func logAndScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks 
 
 		debugNova("Done report, preparing for screenshot.."),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-
-			width, height := int64(1395), int64(985)
-
 			// force viewport emulation
 			err := emulation.SetDeviceMetricsOverride(width, height, 1, false).
 				WithScreenOrientation(&emulation.ScreenOrientation{

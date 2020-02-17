@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 type worklogs struct {
@@ -30,7 +29,6 @@ func getLogableHours() (hours float64, err error) {
 		debug("tempo", "Loggable hours: %.2f", hours)
 	}()
 	hours = 8.5 // default
-	today := time.Now().Format("2006-01-02")
 	url := fmt.Sprintf("https://api.tempo.io/core/3/worklogs/user/%s?from=%s&to=%s", jiraUser, today, today)
 
 	req, err := http.NewRequest("GET", url, nil)
