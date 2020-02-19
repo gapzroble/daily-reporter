@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/h2non/bimg"
+
 	"github.com/rroble/daily-reporter/lib/models"
 )
 
@@ -51,4 +53,12 @@ func exportReport(filterKey, jwt string) ([]byte, error) {
 	}
 
 	return ioutil.ReadAll(response.Body)
+}
+
+func convertReport(data []byte) ([]byte, error) {
+	report := bimg.NewImage(data)
+	report.Convert(bimg.PNG)
+	report.Extract(20, 45, 505, 200)
+	report.Enlarge(680, 700)
+	return report.Image(), nil
 }

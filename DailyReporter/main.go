@@ -76,13 +76,13 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		report, err := tempo.Report(doneTempo)
+		screenshot, err := tempo.Report(doneTempo)
 		if err != nil {
 			log.Debug("main", "Failed to create jira screenshot, %s", err.Error())
 			return
 		}
-		dest := fmt.Sprintf("autolog_jira_%s.pdf", now)
-		if err := ioutil.WriteFile(dest, report, 0644); err != nil {
+		dest := fmt.Sprintf("autolog_jira_%s.png", now)
+		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
 			log.Debug("main", "Failed to save jira screenshot, %s", err.Error())
 		}
 	}()

@@ -50,7 +50,12 @@ func Report(doneTempo <-chan bool) ([]byte, error) {
 		return nil, err
 	}
 
-	return exportReport(filterKey, jwt)
+	pdf, err := exportReport(filterKey, jwt)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertReport(pdf)
 }
 
 func jiraLogin(urlstr string, jwt *string) chromedp.Tasks {
