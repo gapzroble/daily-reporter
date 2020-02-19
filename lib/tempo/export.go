@@ -57,8 +57,9 @@ func exportReport(filterKey, jwt string) ([]byte, error) {
 
 func convertReport(data []byte) ([]byte, error) {
 	report := bimg.NewImage(data)
-	report.Convert(bimg.PNG)
-	report.Extract(20, 45, 505, 200)
-	report.Enlarge(680, 700)
-	return report.Image(), nil
+	image, err := report.Process(bimg.Options{
+		Type:       bimg.PNG,
+		AreaHeight: 200,
+	})
+	return image, err
 }
