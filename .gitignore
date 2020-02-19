@@ -14,10 +14,6 @@
 # Dependency directories (remove the comment below to include it)
 vendor/
 bin/
-packaged.yml
-fullScreenshot.png
-nova_autolog_*.png
-run.sh
-worklogs.json
-filter.json
-filter.sh
+nova_autolog_*
+*.sh
+*.json
