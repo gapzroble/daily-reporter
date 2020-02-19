@@ -44,7 +44,7 @@ func NewFilter(date, workerID string) Filter {
 	}
 }
 
-// ToJSONData method
+// ToJSONData encode to json
 func (filter Filter) ToJSONData() ([]byte, error) {
 	data, err := json.Marshal(filter)
 	if err != nil {

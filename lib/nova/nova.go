@@ -1,31 +1,26 @@
-package main
+package nova
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
+
+	"github.com/rroble/daily-reporter/lib/log"
 )
 
-const waitScreenshot = 15 // seconds
-
-var (
-	novaURL   = "https://nova.fmi.filemaker-cloud.com/fmi/webd/nova%205"
-	novaHours = "8,5"
-)
-
-func logNova(hours <-chan float64) ([]byte, error) {
-	defer debug("nova", "Done Nova")
+// Log nova
+func Log(hours <-chan float64) ([]byte, error) {
+	defer log.Debug("nova", "Done Nova")
 	logHours := <-hours
 	if logHours <= 0 {
 		return nil, nil
 	}
-	debug("nova", "Logging Nova")
+	log.Debug("nova", "Logging Nova")
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer timeoutCancel()
 
@@ -35,7 +30,7 @@ func logNova(hours <-chan float64) ([]byte, error) {
 	allocCtx, allocCancel := chromedp.NewExecAllocator(timeoutCtx, opts...)
 	defer allocCancel()
 
-	chromeCtx, chromeCancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
+	chromeCtx, chromeCancel := chromedp.NewContext(allocCtx)
 	defer chromeCancel()
 
 	setNovaHours(<-hours)
@@ -128,7 +123,7 @@ func logAndScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks 
 
 func debugNova(msg string, args ...interface{}) chromedp.ActionFunc {
 	return chromedp.ActionFunc(func(ctx context.Context) error {
-		debug("nova", msg, args...)
+		log.Debug("nova", msg, args...)
 		return nil
 	})
 }

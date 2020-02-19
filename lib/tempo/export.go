@@ -1,4 +1,4 @@
-package main
+package tempo
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ func getFilterKey(date, jiraUser, jwt string) (string, error) {
 	}
 
 	debug("jira", "Filter report..")
-	req, err := http.NewRequest("POST", "https://app.tempo.io/rest/tempo-timesheets/4/worklogs/export/filter", bytes.NewBuffer(filter))
+	req, err := http.NewRequest("POST", filterURL, bytes.NewBuffer(filter))
 	if err != nil {
 		return "", err
 	}

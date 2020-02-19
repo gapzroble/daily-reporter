@@ -6,41 +6,49 @@ import (
 )
 
 var (
-	username     string
-	password     string
-	project      string
-	details      string
-	jiraUser     string
-	tempoToken   string
-	today        string
-	now          string
-	email        string
-	jiraPassword string
-)
-
-var (
-	width  int64 = 1390
-	height int64 = 895
+	today string
+	now   string
 )
 
 func init() {
-	username = env("NOVA_USERNAME", "Randolph Roble")
-	password = env("NOVA_PASSWORD", "")
-	project = env("PROJECT", "Byggmax")
-	details = env("DETAILS", "(autolog)")
-	jiraUser = env("JIRA_USER", "557058:ddf95d2c-e3e8-4380-9456-d191554f48b7")
-	tempoToken = env("TEMPO_TOKEN", "")
-	today = env("DATE", time.Now().Format("2006-01-02"))
+	today = os.Getenv("DATE")
+	if today == "" {
+		today = time.Now().Format("2006-01-02")
+	}
 	now = today + time.Now().Format("T15:04:05Z07:00")
-	email = env("JIRA_EMAIL", "r.roble@arcanys.com")
-	jiraPassword = env("JIRA_PASSWORD", "")
 }
 
-func env(envKey, defaultValue string) string {
-	val := os.Getenv(envKey)
-	if val == "" {
-		return defaultValue
+func isWeekend(ts time.Time) bool {
+	wd := ts.Weekday()
+	return wd == time.Sunday || wd == time.Saturday
+}
+
+func canRun(ts time.Time) (bool, string) {
+	// don't check if we specify DATE
+	if os.Getenv("DATE") != "" {
+		return true, "Date specified"
 	}
 
-	return val
+	// check weekends
+	if isWeekend(ts) {
+		return false, "Weekend"
+	}
+
+	// check last day of the month
+	// don't run on schedule(usually 10:30pm)
+	// probably logged already
+	currentMonth := ts.Month()
+	for {
+		ts = ts.AddDate(0, 0, 1)
+		if isWeekend(ts) {
+			continue
+		}
+		if ts.Month() != currentMonth {
+			return false, "Last day of month"
+		}
+		break // fine
+	}
+
+	// TODO: check holidays
+	return true, ""
 }

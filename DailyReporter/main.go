@@ -3,17 +3,19 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
-	"os"
 	"sync"
 	"time"
+
+	"github.com/rroble/daily-reporter/lib/log"
+	"github.com/rroble/daily-reporter/lib/nova"
+	"github.com/rroble/daily-reporter/lib/tempo"
 )
 
 func main() {
 	defer handlePanic()
 
 	if ok, reason := canRun(time.Now()); !ok {
-		debug("main", "Won't run today: %s", reason)
+		log.Debug("main", "Won't run today: %s", reason)
 		return
 	}
 
@@ -29,9 +31,9 @@ func main() {
 		// var remaining = 0.0
 		// var err error
 		// ------------ test -------------
-		remaining, err := getLogableHours()
+		remaining, err := tempo.GetLoggableHours()
 		if err != nil {
-			debug("main", "Worklogs error: %s", err.Error())
+			log.Debug("main", "Worklogs error: %s", err.Error())
 			// still continue
 		}
 		for i := 0; i < bufSize; i++ {
@@ -42,18 +44,18 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		screenshot, err := logNova(hours)
+		screenshot, err := nova.Log(hours)
 		if err != nil {
-			debug("main", "Failed to log nova, %s", err.Error())
+			log.Debug("main", "Failed to log nova, %s", err.Error())
 			return
 		}
 		if screenshot == nil {
-			debug("main", "No nova screenshot found")
+			log.Debug("main", "No nova screenshot found")
 			return
 		}
 		dest := fmt.Sprintf("autolog_nova_%s.png", now)
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
-			debug("main", "Failed to save nova screenshot, %s", err.Error())
+			log.Debug("main", "Failed to save nova screenshot, %s", err.Error())
 		}
 	}()
 
@@ -62,9 +64,9 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := logTempo(hours)
+		err := tempo.Log(hours)
 		if err != nil {
-			debug("main", "Failed to log tempo, %s", err.Error())
+			log.Debug("main", "Failed to log tempo, %s", err.Error())
 			doneTempo <- false
 			return
 		}
@@ -74,62 +76,23 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		screenshot, err := jiraScreenshot(doneTempo)
+		report, err := tempo.Report(doneTempo)
 		if err != nil {
-			debug("main", "Failed to create jira screenshot, %s", err.Error())
+			log.Debug("main", "Failed to create jira screenshot, %s", err.Error())
 			return
 		}
 		dest := fmt.Sprintf("autolog_jira_%s.pdf", now)
-		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
-			debug("main", "Failed to save jira screenshot, %s", err.Error())
+		if err := ioutil.WriteFile(dest, report, 0644); err != nil {
+			log.Debug("main", "Failed to save jira screenshot, %s", err.Error())
 		}
 	}()
 
 	wg.Wait()
 }
 
-func debug(thread, msg string, args ...interface{}) {
-	log.Printf("["+thread+"] "+msg+"\n", args...)
-}
-
-func isWeekend(ts time.Time) bool {
-	wd := ts.Weekday()
-	return wd == time.Sunday || wd == time.Saturday
-}
-
-func canRun(ts time.Time) (bool, string) {
-	// don't check if we specify DATE
-	if os.Getenv("DATE") != "" {
-		return true, "Date specified"
-	}
-
-	// check weekends
-	if isWeekend(ts) {
-		return false, "Weekend"
-	}
-
-	// check last day of the month
-	// don't run on schedule(usually 10:30pm)
-	// probably logged already
-	currentMonth := ts.Month()
-	for {
-		ts = ts.AddDate(0, 0, 1)
-		if isWeekend(ts) {
-			continue
-		}
-		if ts.Month() != currentMonth {
-			return false, "Last day of month"
-		}
-		break // fine
-	}
-
-	// TODO: check holidays
-	return true, ""
-}
-
 func handlePanic() {
 	msg := recover()
 	if msg != nil {
-		debug("main", "Go panic: %#v", msg)
+		log.Debug("main", "Go panic: %#v", msg)
 	}
 }
