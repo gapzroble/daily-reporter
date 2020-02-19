@@ -8,43 +8,41 @@ import (
 
 	"github.com/rroble/daily-reporter/lib/log"
 	"github.com/rroble/daily-reporter/lib/nova"
+	"github.com/rroble/daily-reporter/lib/schedule"
 	"github.com/rroble/daily-reporter/lib/tempo"
 )
 
 func main() {
 	defer handlePanic()
+	defer log.Debug("main", "Done")
 
-	if ok, reason := canRun(time.Now()); !ok {
+	if ok, reason := schedule.CanRun(time.Now()); !ok {
 		log.Debug("main", "Won't run today: %s", reason)
 		return
 	}
 
 	bufSize := 2 // temp and nova threads
-	hours := make(chan float64, bufSize)
+	loggable := make(chan int64, bufSize)
 
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// ------------ test -------------
-		// var remaining = 0.0
-		// var err error
-		// ------------ test -------------
-		remaining, err := tempo.GetLoggableHours()
+		remaining, err := tempo.GetLoggable()
 		if err != nil {
 			log.Debug("main", "Worklogs error: %s", err.Error())
 			// still continue
 		}
 		for i := 0; i < bufSize; i++ {
-			hours <- remaining
+			loggable <- remaining
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		screenshot, err := nova.Log(hours)
+		screenshot, err := nova.Log(loggable)
 		if err != nil {
 			log.Debug("main", "Failed to log nova, %s", err.Error())
 			return
@@ -53,7 +51,7 @@ func main() {
 			log.Debug("main", "No nova screenshot found")
 			return
 		}
-		dest := fmt.Sprintf("autolog_nova_%s.png", now)
+		dest := fmt.Sprintf("autolog_nova_%s.png", schedule.Now)
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
 			log.Debug("main", "Failed to save nova screenshot, %s", err.Error())
 		}
@@ -64,7 +62,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := tempo.Log(hours)
+		err := tempo.Log(loggable)
 		if err != nil {
 			log.Debug("main", "Failed to log tempo, %s", err.Error())
 			doneTempo <- false
@@ -81,7 +79,7 @@ func main() {
 			log.Debug("main", "Failed to create jira screenshot, %s", err.Error())
 			return
 		}
-		dest := fmt.Sprintf("autolog_jira_%s.png", now)
+		dest := fmt.Sprintf("autolog_jira_%s.png", schedule.Now)
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
 			log.Debug("main", "Failed to save jira screenshot, %s", err.Error())
 		}

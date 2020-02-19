@@ -15,7 +15,7 @@ func TestSetNovaHours(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		setNovaHours(test.input)
+		setNovaHours(int64(3600 * test.input))
 		if novaHours != test.output {
 			t.Errorf("Expecting novaHours %.2f = '%s', got '%s'", test.input, test.output, novaHours)
 		}

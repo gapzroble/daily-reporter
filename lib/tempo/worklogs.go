@@ -7,37 +7,38 @@ import (
 
 	"github.com/rroble/daily-reporter/lib/log"
 	"github.com/rroble/daily-reporter/lib/models"
+	"github.com/rroble/daily-reporter/lib/schedule"
 )
 
-// GetLoggableHours func
-func GetLoggableHours() (hours float64, err error) {
-	log.Debug("tempo", "Getting available hours")
+// GetLoggable in seconds
+func GetLoggable() (loggable int64, err error) {
+	log.Debug("jira", "Getting available hours")
 	defer func() {
-		log.Debug("tempo", "Loggable hours: %.2f", hours)
+		log.Debug("jira", "Loggable hours: %.2f", float64(loggable)/3600)
 	}()
-	hours = 8.5 // default
-	r := strings.NewReplacer("{jiraUser}", jiraUser, "{date}", today)
+	loggable = 30600 // default
+	r := strings.NewReplacer("{jiraUser}", jiraUser, "{date}", schedule.Today)
 	url := r.Replace(getWorklogsURL)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return hours, err
+		return loggable, err
 	}
 	req.Header.Add("Authorization", "Bearer "+tempoToken)
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return hours, err
+		return loggable, err
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return hours, err
+		return loggable, err
 	}
 
 	worklogs, err := models.NewWorklogs(body)
 	if err != nil {
-		return hours, err
+		return loggable, err
 	}
 
-	return hours - worklogs.Logged(), nil
+	return loggable - worklogs.Logged(), nil
 }

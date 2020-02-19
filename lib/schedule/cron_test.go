@@ -1,4 +1,4 @@
-package main
+package schedule
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ func TestCanRun(t *testing.T) {
 			t.Error(err.Error())
 			continue
 		}
-		actual, _ := canRun(ts)
+		actual, _ := CanRun(ts)
 		if actual != expected {
 			t.Errorf("Expecting %#v on %s, got %#v", expected, date, actual)
 		}

@@ -1,6 +1,8 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Worklog struct
 type Worklog struct {
@@ -23,11 +25,11 @@ func (w Worklog) ToJSONData() ([]byte, error) {
 }
 
 // NewWorklog func
-func NewWorklog(date, details, jiraUser string, hours float64) Worklog {
+func NewWorklog(date, details, jiraUser string, timeSpent int64) Worklog {
 	issue := "TIQ-684" // TODO: map json via env?
 	return Worklog{
 		IssueKey:         issue,
-		TimeSpentSeconds: int64(hours * 60 * 60),
+		TimeSpentSeconds: timeSpent,
 		StartDate:        date,
 		StartTime:        "13:00:00",
 		Description:      details,
@@ -40,15 +42,11 @@ type Worklogs struct {
 	Results []Worklog `json:"results"`
 }
 
-// Logged method
-func (logs *Worklogs) Logged() float64 {
-	logged := 0.0
-	toHours := float64(60 * 60)
-
+// Logged timespent in seconds
+func (logs *Worklogs) Logged() (logged int64) {
 	for _, worklog := range logs.Results {
-		logged += float64(worklog.TimeSpentSeconds) / toHours
+		logged += worklog.TimeSpentSeconds
 	}
-
 	return logged
 }
 

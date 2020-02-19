@@ -2,15 +2,12 @@ package tempo
 
 import (
 	"os"
-	"time"
 )
 
 var (
 	getWorklogsURL = "https://api.tempo.io/core/3/worklogs/user/{jiraUser}?from={date}&to={date}"
 	worklogsURL    = "https://api.tempo.io/core/3/worklogs"
 	tempoToken     = ""
-	today          = ""
-	now            = ""
 	details        = "(autolog)"
 	jiraUser       = "557058:ddf95d2c-e3e8-4380-9456-d191554f48b7"
 	email          = "r.roble@arcanys.com"
@@ -24,13 +21,11 @@ var (
 
 func init() {
 	tempoToken = os.Getenv("TEMPO_TOKEN")
-	today = os.Getenv("DATE")
-	if today == "" {
-		today = time.Now().Format("2006-01-02")
-	}
-	now = today + time.Now().Format("T15:04:05Z07:00")
+	password = os.Getenv("JIRA_PASSWORD")
 	if val := os.Getenv("JIRA_EMAIL"); val != "" {
 		email = val
 	}
-	password = os.Getenv("JIRA_PASSWORD")
+	if val := os.Getenv("TEMPO_REPORT"); val != "" {
+		reportID = val
+	}
 }

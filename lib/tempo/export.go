@@ -59,6 +59,7 @@ func convertReport(data []byte) ([]byte, error) {
 	report := bimg.NewImage(data)
 	image, err := report.Process(bimg.Options{
 		Type:       bimg.PNG,
+		Top:        20,
 		AreaHeight: 200,
 	})
 	return image, err

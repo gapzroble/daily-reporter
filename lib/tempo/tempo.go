@@ -2,22 +2,24 @@ package tempo
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/rroble/daily-reporter/lib/log"
 	"github.com/rroble/daily-reporter/lib/models"
+	"github.com/rroble/daily-reporter/lib/schedule"
 )
 
 // Log tempo
-func Log(hours <-chan float64) error {
-	defer log.Debug("tempo", "Done Tempo")
-	logHours := <-hours
-	if logHours <= 0 {
-		return nil
+func Log(loggable <-chan int64) error {
+	defer log.Debug("jira", "Done Tempo")
+	logSeconds := <-loggable
+	if logSeconds <= 0 {
+		return errors.New("Already logged")
 	}
-	log.Debug("tempo", "Logging Tempo")
-	data, err := models.NewWorklog(today, details, jiraUser, logHours).ToJSONData()
+	log.Debug("jira", "Logging Tempo")
+	data, err := models.NewWorklog(schedule.Today, details, jiraUser, logSeconds).ToJSONData()
 	if err != nil {
 		return err
 	}

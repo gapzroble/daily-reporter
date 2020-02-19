@@ -1,29 +1,17 @@
-package main
+package schedule
 
 import (
 	"os"
 	"time"
 )
 
-var (
-	today string
-	now   string
-)
-
-func init() {
-	today = os.Getenv("DATE")
-	if today == "" {
-		today = time.Now().Format("2006-01-02")
-	}
-	now = today + time.Now().Format("T15:04:05Z07:00")
-}
-
 func isWeekend(ts time.Time) bool {
 	wd := ts.Weekday()
 	return wd == time.Sunday || wd == time.Saturday
 }
 
-func canRun(ts time.Time) (bool, string) {
+// CanRun check if can run now
+func CanRun(ts time.Time) (bool, string) {
 	// don't check if we specify DATE
 	if os.Getenv("DATE") != "" {
 		return true, "Date specified"

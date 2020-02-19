@@ -2,6 +2,7 @@ package nova
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,14 +12,16 @@ import (
 	"github.com/chromedp/chromedp"
 
 	"github.com/rroble/daily-reporter/lib/log"
+	"github.com/rroble/daily-reporter/lib/schedule"
 )
 
 // Log nova
-func Log(hours <-chan float64) ([]byte, error) {
+func Log(loggable <-chan int64) ([]byte, error) {
 	defer log.Debug("nova", "Done Nova")
-	logHours := <-hours
-	if logHours <= 0 {
-		return nil, nil
+	logSeconds := <-loggable
+	// 0 is fine if holiday or leave
+	if logSeconds <= 0 && !schedule.IsHolidayOrLeave() {
+		return nil, errors.New("Already logged")
 	}
 	log.Debug("nova", "Logging Nova")
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), 120*time.Second)
@@ -33,7 +36,7 @@ func Log(hours <-chan float64) ([]byte, error) {
 	chromeCtx, chromeCancel := chromedp.NewContext(allocCtx)
 	defer chromeCancel()
 
-	setNovaHours(<-hours)
+	setNovaHours(logSeconds)
 
 	var buf []byte
 	tasks := logAndScreenshot(novaURL, 90, &buf)
@@ -81,6 +84,7 @@ func logAndScreenshot(urlstr string, quality int64, res *[]byte) chromedp.Tasks 
 		chromedp.SendKeys(`[contentEditable=true]`, details+"."),
 		chromedp.Click(`//div[contains(text(), "Category")]/../..`),
 		chromedp.Click(`//div[contains(text(), "Billable hours")]`),
+		// TODO: select date
 
 		debugNova("Saving time report.."),
 		chromedp.WaitVisible(`//span[contains(text(), "Save time report")]`),
@@ -128,8 +132,8 @@ func debugNova(msg string, args ...interface{}) chromedp.ActionFunc {
 	})
 }
 
-func setNovaHours(hours float64) {
-	novaHours = fmt.Sprintf("%f", hours)
+func setNovaHours(loggable int64) {
+	novaHours = fmt.Sprintf("%f", float64(loggable)/3600)
 	novaHours = strings.TrimRight(novaHours, "0")
 	novaHours = strings.TrimRight(novaHours, ".")
 	novaHours = strings.ReplaceAll(novaHours, ".", ",")
