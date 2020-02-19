@@ -25,17 +25,15 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		// ------------ test -------------
+		// var remaining = 0.0
+		// var err error
+		// ------------ test -------------
 		remaining, err := getLogableHours()
 		if err != nil {
 			debug("main", "Worklogs error: %s", err.Error())
 			// still continue
 		}
-		// unless no remaining hours
-		// if remaining <= 0 {
-		// 	debug("main", "No loggable hours, already logged?")
-		// 	debug("main", "Quit")
-		// 	os.Exit(-1)
-		// }
 		for i := 0; i < bufSize; i++ {
 			hours <- remaining
 		}
@@ -81,7 +79,7 @@ func main() {
 			debug("main", "Failed to create jira screenshot, %s", err.Error())
 			return
 		}
-		dest := fmt.Sprintf("autolog_jira_%s.png", now)
+		dest := fmt.Sprintf("autolog_jira_%s.pdf", now)
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
 			debug("main", "Failed to save jira screenshot, %s", err.Error())
 		}
