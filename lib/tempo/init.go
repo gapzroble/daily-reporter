@@ -28,4 +28,7 @@ func init() {
 	if val := os.Getenv("TEMPO_REPORT"); val != "" {
 		reportID = val
 	}
+	if val := os.Getenv("DETAILS"); val != "" {
+		details = val
+	}
 }
