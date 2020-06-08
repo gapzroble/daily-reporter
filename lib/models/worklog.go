@@ -7,11 +7,17 @@ import (
 // Worklog struct
 type Worklog struct {
 	IssueKey         string `json:"issueKey"`
+	Issue            Issue  `json:"issue"`
 	TimeSpentSeconds int64  `json:"timeSpentSeconds"`
 	StartDate        string `json:"startDate"`
 	StartTime        string `json:"startTime"`
 	Description      string `json:"description"`
 	AuthorAccountID  string `json:"authorAccountId"`
+}
+
+// Issue struct
+type Issue struct {
+	Key string `json:"key"`
 }
 
 // ToJSONData encode to json
