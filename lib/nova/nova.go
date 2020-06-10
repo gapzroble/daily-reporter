@@ -34,7 +34,7 @@ func Init() {
 	timeoutCtx, timeoutCancel = context.WithTimeout(context.Background(), 120*time.Second)
 
 	opts := []chromedp.ExecAllocatorOption{
-		chromedp.Flag("headless", false),
+		chromedp.Flag("headless", true),
 	}
 	var allocCtx context.Context
 	allocCtx, allocCancel = chromedp.NewExecAllocator(timeoutCtx, opts...)
