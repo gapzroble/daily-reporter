@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // Worklog struct
@@ -28,6 +29,14 @@ func (w Worklog) ToJSONData() ([]byte, error) {
 	}
 
 	return dat, nil
+}
+
+func (w Worklog) String() string {
+	key := w.IssueKey
+	if key == "" {
+		key = w.Issue.Key
+	}
+	return fmt.Sprintf("%s: %s", key, w.Description)
 }
 
 // NewWorklog func

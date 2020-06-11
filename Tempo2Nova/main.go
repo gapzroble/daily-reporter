@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -33,7 +32,7 @@ func main() {
 		if strings.HasPrefix(worklog.Issue.Key, "BLOCAL-") {
 			continue
 		}
-		fmt.Printf("%+v\n", worklog)
+		log.Debug("main", "Copy worklog: %s", worklog)
 		if err := nova.LogFromTempo(worklog); err != nil {
 			log.Debug("main", "Failed to log nova: %s", err.Error())
 		}
