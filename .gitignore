@@ -13,8 +13,10 @@
 
 # Dependency directories (remove the comment below to include it)
 vendor/
-!bin/.gitkeep
-bin/
+bin/*
 autolog_*
 *.sh
 *.json
+nova/*
+
+!/**/.gitkeep
