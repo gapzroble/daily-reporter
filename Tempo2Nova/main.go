@@ -18,10 +18,15 @@ func main() {
 		log.Debug("main", "Won't run today: %s", reason)
 		return
 	}
+	log.Debug("main", "Date is %s", schedule.Today)
 
 	worklogs, err := tempo.Logs()
-	if err != nil || worklogs == nil {
+	if err != nil {
 		log.Debug("main", "Failed to get worklogs: %s", err.Error())
+		return
+	}
+	if worklogs == nil {
+		log.Debug("main", "No worklogs found")
 		return
 	}
 
@@ -29,9 +34,12 @@ func main() {
 	defer nova.End()
 
 	for _, worklog := range worklogs.Results {
-		if strings.HasPrefix(worklog.Issue.Key, "BLOCAL-") {
+		if !strings.HasPrefix(worklog.Issue.Key, "TIQ-") {
 			continue
 		}
+		// if strings.HasPrefix(worklog.Issue.Key, "TIQ-684") {
+		// 	continue
+		// }
 		log.Debug("main", "Copy worklog: %s", worklog)
 		if err := nova.LogFromTempo(worklog); err != nil {
 			log.Debug("main", "Failed to log nova: %s", err.Error())
