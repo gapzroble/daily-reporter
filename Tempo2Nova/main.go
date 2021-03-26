@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -37,15 +39,31 @@ func main() {
 		if !strings.HasPrefix(worklog.Issue.Key, "TIQ-") {
 			continue
 		}
-		// if strings.HasPrefix(worklog.Issue.Key, "TIQ-684") {
+
+		// skip, already logged
+		// if strings.HasPrefix(worklog.Issue.Key, "TIQ-") {
 		// 	continue
 		// }
+
 		log.Debug("main", "Copy worklog: %s", worklog)
 		if err := nova.LogFromTempo(worklog); err != nil {
 			log.Debug("main", "Failed to log nova: %s", err.Error())
 		}
 	}
 
+	screenshot, err := nova.PrintScreen()
+	if err != nil {
+		log.Debug("main", "Failed to log nova, %s", err.Error())
+		return
+	}
+	if screenshot == nil {
+		log.Debug("main", "No nova screenshot found")
+		return
+	}
+	dest := fmt.Sprintf("/home/randolph/Downloads/nova_%s.png", schedule.Now)
+	if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
+		log.Debug("main", "Failed to save nova screenshot, %s", err.Error())
+	}
 }
 
 func handlePanic() {

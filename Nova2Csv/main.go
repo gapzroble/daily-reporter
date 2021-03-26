@@ -9,12 +9,12 @@ import (
 
 func main() {
 
-	dat, err := ioutil.ReadFile("nova/tiqqe_june")
+	dat, err := ioutil.ReadFile("nova/tiqqe_july")
 	if err != nil {
 		panic(err)
 	}
 
-	file, err := os.Create("nova/tiqqe_june.csv")
+	file, err := os.Create("nova/tiqqe_july.csv")
 	if err != nil {
 		panic(err)
 	}

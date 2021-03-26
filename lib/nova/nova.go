@@ -31,7 +31,7 @@ func init() {
 func Init() {
 	log.Debug("nova", "Loading Nova")
 	var timeoutCtx context.Context
-	timeoutCtx, timeoutCancel = context.WithTimeout(context.Background(), 120*time.Second)
+	timeoutCtx, timeoutCancel = context.WithTimeout(context.Background(), 5*60*time.Second)
 
 	opts := []chromedp.ExecAllocatorOption{
 		chromedp.Flag("headless", true),
@@ -65,6 +65,52 @@ func LogFromTempo(worklog models.Worklog) error {
 	return nil
 }
 
+// PrintScreen grab screen shot
+func PrintScreen() ([]byte, error) {
+	defer log.Debug("nova", "Done Nova Screenshot")
+
+	var buf []byte
+	tasks := chromedp.Tasks{
+		debugNova("Done report, preparing for screenshot.."),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			// force viewport emulation
+			err := emulation.SetDeviceMetricsOverride(width, height, 1, false).
+				WithScreenOrientation(&emulation.ScreenOrientation{
+					Type:  emulation.OrientationTypePortraitPrimary,
+					Angle: 0,
+				}).
+				Do(ctx)
+			if err != nil {
+				return err
+			}
+
+			// wait for the page to render properly
+			time.Sleep(waitScreenshot * time.Second)
+
+			// capture screenshot
+			*&buf, err = page.CaptureScreenshot().
+				WithQuality(90).
+				WithClip(&page.Viewport{
+					X:      1,
+					Y:      1,
+					Width:  float64(width),
+					Height: float64(height),
+					Scale:  1,
+				}).Do(ctx)
+			if err != nil {
+				return err
+			}
+			return nil
+		}),
+	}
+
+	if err := chromedp.Run(chromeCtx, tasks); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
 func logReport(worklog models.Worklog) chromedp.Tasks {
 	hours := toNovaHours(worklog.TimeSpentSeconds)
 	project := "TIQ Internal time"
@@ -74,22 +120,44 @@ func logReport(worklog models.Worklog) chromedp.Tasks {
 	ionumber := ""
 
 	switch worklog.Issue.Key {
-	case "TIQ-957":
-		project = "PN Cleveron Project"
-		nextcat = true
-		ionumber = "7014750/47200/Parcel Robotics 100% Randolph Roble"
-	case "TIQ-1095":
+	case "TIQ-1095": // training
 		category = "Non billable hours"
-	case "TIQ-621":
+	case "TIQ-621": // sysops
 		project = "SO SysOps"
-	case "TIQ-705":
+	case "TIQ-721": // SRS
+		project = "SO SysOps"
+		details = "SRS: " + details
+	case "TIQ-1075": // Sonat change requests
+		project = "SO Varner Change requests"
+	case "TIQ-684": // Byggmax integration
+		project = "SO Byggmax"
+	case "TIQ-?": // Byggmax invoice
+		project = "SO Byggmax"
+		details = "ByggMax Invoice: " + details
+	case "TIQ-705": // nk
 		project = "SO Implementation NK"
 		nextcat = true
-	case "TIQ-1075":
-		details = "Varner: " + details
-		project = "SO Change requests"
-	case "TIQ-684":
-		project = "SO Byggmax"
+
+	case "TIQ-957": // PN-Salling Group-Cleveron
+		project = "PN Cleveron Project"
+		nextcat = true
+		// ionumber = "7014750/47200/Parcel Robotics 100% Randolph Roble"
+		// ionumber = "7014750/47200/654510 100% Randolph Roble"
+		// ionumber = "039004/8034167/NCP 100% Randolph Roble"
+		ionumber = "039013/8034311/API Randolph Roble"
+		details = "Cleveron/ICA: " + details
+	case "TIQ-1351": // NCP
+		project = "PN Cleveron Project"
+		nextcat = true
+		ionumber = "039013/8034311/API Randolph Roble"
+		details = "NCP/OST: " + details
+
+	case "TIQ-1493": // Accumbo
+		project = "SO Accumbo Zendesk"
+		nextcat = true
+	case "TIQ-1589": // Arrow
+		project = "SO43067 AR Integration Arrow - Pulsen"
+		nextcat = true
 	}
 
 	button := "SAVE"
