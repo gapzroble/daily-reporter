@@ -8,6 +8,6 @@ var holidays = map[string]string{
 
 // IsHolidayOrLeave check date
 func IsHolidayOrLeave() bool {
-	_, ok := holidays[Today]
+	_, ok := holidays[Today()]
 	return ok
 }

@@ -38,7 +38,7 @@ func Report(doneTempo <-chan bool) ([]byte, error) {
 	chromeCtx, chromeCancel := chromedp.NewContext(allocCtx)
 	defer chromeCancel()
 
-	r := strings.NewReplacer("{today}", schedule.Today, "{reportID}", reportID, "{jiraUser}", jiraUser)
+	r := strings.NewReplacer("{today}", schedule.Today(), "{reportID}", reportID, "{jiraUser}", jiraUser)
 	url := loginURL + U.PathEscape(r.Replace(jiraURL))
 
 	var jwt string
@@ -46,7 +46,7 @@ func Report(doneTempo <-chan bool) ([]byte, error) {
 		return nil, err
 	}
 
-	filterKey, err := getFilterKey(schedule.Today, jiraUser, jwt)
+	filterKey, err := getFilterKey(schedule.Today(), jiraUser, jwt)
 	if err != nil {
 		return nil, err
 	}

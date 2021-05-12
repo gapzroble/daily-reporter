@@ -2,7 +2,8 @@ SHELL := /bin/bash
 
 build: deps clean test
 	#GOARCH=amd64 GOOS=linux go build -o ./bin/DailyReporter ./DailyReporter
-	GOARCH=amd64 GOOS=linux go build -o ./bin/Tempo2Nova ./Tempo2Nova
+	# GOARCH=amd64 GOOS=linux go build -o ./bin/Tempo2Nova ./Tempo2Nova
+	GOARCH=amd64 GOOS=linux go build -o ./bin/Tempo2Clockify ./Tempo2Clockify
 	GOARCH=amd64 GOOS=linux go build -o ./bin/Nova2Csv ./Nova2Csv
 
 run:

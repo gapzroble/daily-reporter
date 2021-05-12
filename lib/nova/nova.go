@@ -211,10 +211,10 @@ func logReport(worklog models.Worklog) chromedp.Tasks {
 		(func() chromedp.Tasks {
 			return chromedp.Tasks{
 				chromedp.Click(`//div[contains(@class, "fm-datefield")][1]`),
-				chromedp.SendKeys(`[contentEditable=true]`, strings.ReplaceAll(schedule.Today, "-", "/")),
+				chromedp.SendKeys(`[contentEditable=true]`, strings.ReplaceAll(schedule.Today(), "-", "/")),
 				chromedp.Blur(`[contentEditable=true]`),
 				chromedp.Click(`//div[contains(@class, "fm-datefield")][2]`),
-				chromedp.SendKeys(`[contentEditable=true]`, strings.ReplaceAll(schedule.Today, "-", "/")),
+				chromedp.SendKeys(`[contentEditable=true]`, strings.ReplaceAll(schedule.Today(), "-", "/")),
 				chromedp.Blur(`[contentEditable=true]`),
 			}
 		}()),

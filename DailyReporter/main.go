@@ -51,7 +51,7 @@ func main() {
 			log.Debug("main", "No nova screenshot found")
 			return
 		}
-		dest := fmt.Sprintf("autolog_nova_%s.png", schedule.Now)
+		dest := fmt.Sprintf("autolog_nova_%s.png", schedule.DateTime())
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
 			log.Debug("main", "Failed to save nova screenshot, %s", err.Error())
 		}
@@ -79,7 +79,7 @@ func main() {
 			log.Debug("main", "Failed to create jira screenshot, %s", err.Error())
 			return
 		}
-		dest := fmt.Sprintf("autolog_jira_%s.png", schedule.Now)
+		dest := fmt.Sprintf("autolog_jira_%s.png", schedule.DateTime())
 		if err := ioutil.WriteFile(dest, screenshot, 0644); err != nil {
 			log.Debug("main", "Failed to save jira screenshot, %s", err.Error())
 		}

@@ -19,7 +19,7 @@ func Log(loggable <-chan int64) error {
 		return errors.New("Already logged")
 	}
 	log.Debug("jira", "Logging Tempo")
-	data, err := models.NewWorklog(schedule.Today, details, jiraUser, logSeconds).ToJSONData()
+	data, err := models.NewWorklog(schedule.Today(), details, jiraUser, logSeconds).ToJSONData()
 	if err != nil {
 		return err
 	}
