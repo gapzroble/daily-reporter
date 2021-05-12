@@ -1,4 +1,4 @@
 # daily-reporter
 
 ### dependencies
-* libvips-dev
+* libvips-dev - nova chrome headless
